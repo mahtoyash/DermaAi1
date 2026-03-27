@@ -8,19 +8,16 @@ from PIL import Image, UnidentifiedImageError
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ✅ Training ke exact val_transforms — same mean/std, same library
 TRANSFORM = A.Compose([
     A.Resize(224, 224),
     A.Normalize(
-        mean=[0.7216, 0.5765, 0.5725],   # HAM10000-specific
+        mean=[0.7216, 0.5765, 0.5725],
         std =[0.1404, 0.1501, 0.1669],
     ),
     ToTensorV2(),
 ])
 
-
 def _load_as_rgb_numpy(image_source) -> np.ndarray:
-    """File path ya PIL Image — dono se RGB numpy array banao."""
     if isinstance(image_source, str):
         img = cv2.imread(image_source)
         if img is None:
@@ -34,21 +31,36 @@ def _load_as_rgb_numpy(image_source) -> np.ndarray:
         raise TypeError("image_source must be str path, PIL.Image, or numpy array")
     return img
 
-
 def predict(model, classes, image_source):
-    """
-    image_source: file path (str) | PIL.Image | numpy array (RGB, HWC)
+    img = _load_as_rgb_numpy(image_source)
 
-    Returns: list of dicts sorted by confidence desc
-      [{"class": "Melanoma", "confidence": 87.32}, ...]
-    """
-    img    = _load_as_rgb_numpy(image_source)
+    # ── DIAGNOSTIC ──────────────────────────────────────
+    print(f"\n{'='*50}")
+    print(f"[D] img shape    : {img.shape}")
+    print(f"[D] img dtype    : {img.dtype}")
+    print(f"[D] img min/max  : {img.min()} / {img.max()}")
+    # ────────────────────────────────────────────────────
+
     tensor = TRANSFORM(image=img)["image"].unsqueeze(0).to(device)
+
+    # ── DIAGNOSTIC ──────────────────────────────────────
+    print(f"[D] tensor shape : {tensor.shape}")
+    print(f"[D] tensor min   : {tensor.min():.4f}")
+    print(f"[D] tensor max   : {tensor.max():.4f}")
+    print(f"[D] tensor mean  : {tensor.mean():.4f}")
+    # ────────────────────────────────────────────────────
 
     model.eval()
     with torch.no_grad():
         logits = model(tensor)
         probs  = F.softmax(logits, dim=1).squeeze().cpu().tolist()
+
+    # ── DIAGNOSTIC ──────────────────────────────────────
+    print(f"[D] raw logits   : {[round(x,3) for x in logits[0].cpu().tolist()]}")
+    print(f"[D] probs        : {[round(p,4) for p in probs]}")
+    print(f"[D] classes      : {classes}")
+    print(f"{'='*50}\n")
+    # ────────────────────────────────────────────────────
 
     if isinstance(probs, float):
         probs = [probs]
