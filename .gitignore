@@ -1,0 +1,14 @@
+#model
+model/*.pth
+model/*.pt
+
+# Uploaded images aur reports
+static/uploads/
+static/reports/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
