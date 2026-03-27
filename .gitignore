@@ -1,6 +1,4 @@
-#model
-model/*.pth
-model/*.pt
+
 
 # Uploaded images aur reports
 static/uploads/
