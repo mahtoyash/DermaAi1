@@ -10,8 +10,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TRANSFORM = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
+    transforms.Normalize(
+        mean=[0.7216, 0.5765, 0.5725],   # ← yeh line fix karo
+        std =[0.1404, 0.1501, 0.1669],   # ← yeh bhi
+    ),
 ])
 
 
